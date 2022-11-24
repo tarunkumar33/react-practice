@@ -1,20 +1,44 @@
-import React, { useContext } from 'react';
+import React, { useState } from 'react';
 
-import Login from './components/Login/Login';
-import Home from './components/Home/Home';
-import MainHeader from './components/MainHeader/MainHeader';
-import AuthContext from './store/auth-context';
+import MoviesList from './components/MoviesList';
+import './App.css';
+import axios from 'axios';
 
 function App() {
-  const ctx = useContext(AuthContext);
+  const [movies, setMovies] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  async function fetchMoviesHandler() {
+    setIsLoading(true);
+
+    // const response = await fetch('https://swapi.dev/api/films/');
+    const response = await axios('https://swapi.dev/api/films/');
+    // const data = await response.json();
+    const data = response.data;
+    console.log('data:', data)
+
+    const transformedMovies = data.results.map((movieData) => {
+      return {
+        id: movieData.episode_id,
+        title: movieData.title,
+        openingText: movieData.opening_crawl,
+        releaseDate: movieData.release_date,
+      };
+    });
+    setMovies(transformedMovies);
+    setIsLoading(false);
+  }
 
   return (
     <React.Fragment>
-      <MainHeader />
-      <main>
-        {!ctx.isLoggedIn && <Login />}
-        {ctx.isLoggedIn && <Home />}
-      </main>
+      <section>
+        <button onClick={fetchMoviesHandler}>Fetch Movies</button>
+      </section>
+      <section>
+        {!isLoading && movies.length > 0 && <MoviesList movies={movies} />}
+        {!isLoading && movies.length === 0 && <p>Found no movies.</p>}
+        {isLoading && <p>Loading...</p>}
+      </section>
     </React.Fragment>
   );
 }
